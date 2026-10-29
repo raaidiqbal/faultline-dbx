@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install Faultline
+        run: python -m pip install -e .
+      - name: Compile Python sources
+        run: python -m compileall -q src databricks tests
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Run reconciliation smoke test
+        run: >-
+          faultline simulate
+          --entities 100
+          --duplicate-every 7
+          --corrupt-every 11
+          --reverse-window 5
+

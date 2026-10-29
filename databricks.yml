@@ -1,0 +1,35 @@
+bundle:
+  name: faultline-dbx
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog used by Faultline.
+    default: workspace
+  source_schema:
+    description: Schema receiving Lakebase Change Data Feed tables.
+    default: faultline_raw
+  target_schema:
+    description: Schema containing Faultline pipeline outputs.
+    default: faultline
+  source_table:
+    description: Lakebase CDF history table consumed by the pipeline.
+    default: ${var.catalog}.${var.source_schema}.lb_orders_history
+
+targets:
+  dev:
+    default: true
+    mode: development
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: ${workspace.current_user.userName}
+        level: CAN_MANAGE
+
