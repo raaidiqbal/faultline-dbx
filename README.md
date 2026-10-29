@@ -2,6 +2,8 @@
 
 Faultline is a fault-injected change-data-capture reliability lab for Databricks. It is designed to answer a practical question: when operational data arrives twice, late, malformed, out of order, or after a schema change, can the lakehouse recover to a provably correct state?
 
+![Faultline Databricks App incident console](docs/faultline-dashboard.png)
+
 The finished system will connect Lakebase Postgres, Lakebase Change Data Feed, Unity Catalog, Lakeflow Declarative Pipelines, and a Databricks App. The repository starts with a deterministic local core so the reconciliation and fault-handling logic can be tested without a cloud workspace.
 
 ## Current milestone
