@@ -22,6 +22,9 @@ classifiers = [
 [project.scripts]
 faultline = "faultline.cli:main"
 
+[project.optional-dependencies]
+databricks = ["databricks-sdk>=0.70,<1"]
+
 [tool.setuptools]
 package-dir = { "" = "src" }
 

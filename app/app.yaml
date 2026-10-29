@@ -1,0 +1,13 @@
+command: ["streamlit", "run", "app.py"]
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: FAULTLINE_RELIABILITY_TABLE
+    valueFrom: reliability-table
+  - name: FAULTLINE_CURRENT_TABLE
+    valueFrom: current-table
+  - name: FAULTLINE_QUARANTINE_TABLE
+    valueFrom: quarantine-table
+  - name: FAULTLINE_HISTORY_TABLE
+    valueFrom: history-table
+

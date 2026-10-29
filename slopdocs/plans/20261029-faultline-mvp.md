@@ -14,7 +14,7 @@ Primary architecture:
 - Declarative Automation Bundle defines deployable resources. GitHub Actions runs local tests and static validation; Free Edition lacks account APIs needed for some deployment identities.
 - Public artifact is GitHub README + architecture diagram + measured benchmarks + 90-second video/GIF.
 
-Fallback: if Lakebase CDF cannot be enabled, generate Delta CDC input directly while preserving the same event schema, fault harness, Lakeflow pipeline, observability, and UI. Do not block the project on a preview feature.
+Fallback: if Lakebase CDF cannot be enabled, generate Delta CDC input directly while preserving the same event schema, fault harness, Lakeflow pipeline, observability, and UI. Do not block the project on a preview feature. This fallback is active in the Free Edition workspace because Lakebase CDF rejects catalogs backed by Databricks default storage; the tier does not provide the required external-storage catalog.
 
 Milestones:
 

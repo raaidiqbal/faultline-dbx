@@ -3,21 +3,20 @@ resources:
     faultline_cdc:
       name: "[${bundle.target}] Faultline CDC Reliability"
       catalog: ${var.catalog}
-      schema: ${var.target_schema}
+      schema: ${resources.schemas.faultline_schema.name}
       serverless: true
       continuous: false
       channel: CURRENT
       edition: ADVANCED
-      development: true
       libraries:
         - file:
             path: ../databricks/pipelines/faultline_pipeline.py
       configuration:
-        faultline.source_table: ${var.source_table}
+        faultline.source_table: ${var.catalog}.${resources.schemas.faultline_raw_schema.name}.lb_orders_history
         pipelines.metrics.flowTimeReporter.enabled: "true"
       event_log:
         catalog: ${var.catalog}
-        schema: ${var.target_schema}
+        schema: ${resources.schemas.faultline_schema.name}
         name: faultline_pipeline_event_log
       tags:
         project: faultline

@@ -1,0 +1,33 @@
+resources:
+  apps:
+    faultline_console:
+      name: faultline-${workspace.current_user.short_name}
+      description: Read-only incident console for Faultline CDC reliability signals.
+      source_code_path: ../app
+      resources:
+        - name: sql-warehouse
+          description: Least-privilege query compute for the incident console.
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+        - name: reliability-table
+          uc_securable:
+            securable_type: TABLE
+            securable_full_name: ${var.catalog}.${resources.schemas.faultline_schema.name}.orders_reliability
+            permission: SELECT
+        - name: current-table
+          uc_securable:
+            securable_type: TABLE
+            securable_full_name: ${var.catalog}.${resources.schemas.faultline_schema.name}.orders_current
+            permission: SELECT
+        - name: quarantine-table
+          uc_securable:
+            securable_type: TABLE
+            securable_full_name: ${var.catalog}.${resources.schemas.faultline_schema.name}.orders_quarantine
+            permission: SELECT
+        - name: history-table
+          uc_securable:
+            securable_type: TABLE
+            securable_full_name: ${var.catalog}.${resources.schemas.faultline_schema.name}.orders_history
+            permission: SELECT
+

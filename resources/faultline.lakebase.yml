@@ -1,0 +1,39 @@
+resources:
+  schemas:
+    faultline_raw_schema:
+      name: ${var.source_schema}
+      catalog_name: ${var.catalog}
+      comment: Raw Lakebase Change Data Feed destination tables.
+
+    faultline_schema:
+      name: ${var.target_schema}
+      catalog_name: ${var.catalog}
+      comment: Validated, quarantined, projected, and observable Faultline data.
+
+  postgres_projects:
+    faultline:
+      project_id: faultline-dbx
+      display_name: Faultline CDC Reliability Lab
+      pg_version: 17
+      history_retention_duration: 604800s
+      default_endpoint_settings:
+        autoscaling_limit_min_cu: 0.5
+        autoscaling_limit_max_cu: 1.0
+        suspend_timeout_duration: 300s
+
+  postgres_branches:
+    production:
+      parent: ${resources.postgres_projects.faultline.name}
+      branch_id: production
+      no_expiry: true
+      replace_existing: true
+
+  postgres_endpoints:
+    primary:
+      parent: ${resources.postgres_branches.production.name}
+      endpoint_id: primary
+      endpoint_type: ENDPOINT_TYPE_READ_WRITE
+      autoscaling_limit_min_cu: 0.5
+      autoscaling_limit_max_cu: 1.0
+      replace_existing: true
+

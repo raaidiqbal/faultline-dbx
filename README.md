@@ -15,9 +15,15 @@ The local engine implements:
 - deterministic replay and reconciliation invariants; and
 - a command-line report suitable for regression and benchmark runs.
 
-The repository now also contains a deployable Lakeflow pipeline skeleton and a
-Declarative Automation Bundle. Workspace validation and the incident console
-are the next milestones.
+The repository also contains a deployed Lakeflow pipeline, Declarative
+Automation Bundle, Lakebase project, and read-only Databricks App incident
+console. The next milestone is a larger fault matrix and recorded public demo.
+
+The reference workspace runs a Lakebase-CDF-compatible Delta fallback because
+Free Edition uses Databricks default catalog storage, while native Lakebase CDF
+currently requires an external-storage-backed catalog. The real Lakebase
+database remains deployed and exercised; the fallback preserves the documented
+CDF columns and all downstream semantics without overstating preview support.
 
 ## Run locally
 
@@ -42,9 +48,34 @@ databricks bundle deploy -t dev
 databricks bundle run faultline_cdc -t dev
 ```
 
-Override `catalog`, `source_schema`, `target_schema`, or `source_table` with
-`--var` when your workspace names differ from the defaults. No credentials or
-workspace URLs belong in this repository.
+Override `catalog`, `source_schema`, or `target_schema` with `--var` when your
+workspace names differ from the defaults. The source table name is derived
+from the deployed raw-schema resource so development prefixes remain correct.
+No credentials or workspace URLs belong in this repository.
+
+For a fallback workspace, seed and verify the exact CDF-compatible contract:
+
+```powershell
+python -m pip install -e ".[databricks]"
+python scripts/seed_delta_cdf.py --warehouse-id <warehouse-id> --schema <raw-schema>
+python scripts/verify_workspace.py --warehouse-id <warehouse-id> --schema <target-schema>
+```
+
+## Verified workspace result
+
+On October 29, 2026, the development bundle completed successfully in a
+Databricks Free Edition workspace. The automated verifier confirmed:
+
+- 8 received rows and 7 distinct source events;
+- 1 exact duplicate detected;
+- 1 malformed order quarantined with `valid_order_values` as the reason;
+- 6 valid actionable rows and 4 SCD Type 2 history rows;
+- 2 final current-state orders after update and delete semantics; and
+- a successful Lakeflow update with every flow completed.
+
+The incident console runs as an authenticated Databricks App. Its service
+principal receives `CAN_USE` on one SQL warehouse and `SELECT` on only the four
+tables it displays.
 
 ## Target architecture
 

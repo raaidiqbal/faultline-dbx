@@ -2,6 +2,8 @@
 
 The Lakeflow adapter lives in `databricks/pipelines/faultline_pipeline.py` and
 is deployed by the Declarative Automation Bundle at the repository root.
+The same bundle owns the two Unity Catalog schemas and the Lakebase project,
+production branch, and scale-to-zero primary endpoint.
 
 Input contract: a Lakebase Change Data Feed destination named
 `lb_orders_history`. The adapter depends on documented Lakebase columns

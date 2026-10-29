@@ -14,10 +14,10 @@ variables:
   target_schema:
     description: Schema containing Faultline pipeline outputs.
     default: faultline
-  source_table:
-    description: Lakebase CDF history table consumed by the pipeline.
-    default: ${var.catalog}.${var.source_schema}.lb_orders_history
-
+  warehouse_id:
+    description: Existing SQL warehouse used by the Faultline incident console.
+    lookup:
+      warehouse: Serverless Starter Warehouse
 targets:
   dev:
     default: true
