@@ -1,31 +1,26 @@
 # Faultline
 
-Faultline is a fault-injected change-data-capture reliability lab for Databricks. It is designed to answer a practical question: when operational data arrives twice, late, malformed, out of order, or after a schema change, can the lakehouse recover to a provably correct state?
+[![CI](https://github.com/raaidiqbal/faultline-dbx/actions/workflows/ci.yml/badge.svg)](https://github.com/raaidiqbal/faultline-dbx/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/raaidiqbal/faultline-dbx/actions/workflows/codeql.yml/badge.svg)](https://github.com/raaidiqbal/faultline-dbx/actions/workflows/codeql.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
+[![MIT License](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
+
+Faultline is a fault-injected change-data-capture reliability lab for Databricks. It answers one concrete systems question: when operational changes arrive twice, late, malformed, out of order, or as deletes, can the lakehouse still converge to a provably correct state?
 
 ![Faultline Databricks App incident console](docs/faultline-dashboard.png)
 
-The finished system will connect Lakebase Postgres, Lakebase Change Data Feed, Unity Catalog, Lakeflow Declarative Pipelines, and a Databricks App. The repository starts with a deterministic local core so the reconciliation and fault-handling logic can be tested without a cloud workspace.
+## Engineering evidence
 
-## Current milestone
+This is a deployed end-to-end system, not a notebook mockup.
 
-The local engine implements:
+- **Design:** explicit CDC ordering, idempotency, quarantine, tombstone, and replay invariants.
+- **Development:** dependency-free Python correctness oracle plus thin Databricks adapters.
+- **Testing:** 16 deterministic tests across Python 3.11 and 3.13, platform-contract tests, and an automated workspace verifier.
+- **Delivery:** Declarative Automation Bundle owns Lakebase, Unity Catalog schemas, Lakeflow, and the Databricks App.
+- **Operations:** pipeline event log, expectations, reliability counters, SCD1 current state, SCD2 history, and a read-only incident console.
+- **Security:** OAuth instead of embedded tokens; the app receives `CAN_USE` on one warehouse and `SELECT` on only four tables.
 
-- deterministic CDC event generation;
-- duplicate, corruption, and out-of-order fault injection;
-- idempotent projection into current state;
-- invalid-event quarantine;
-- deterministic replay and reconciliation invariants; and
-- a command-line report suitable for regression and benchmark runs.
-
-The repository also contains a deployed Lakeflow pipeline, Declarative
-Automation Bundle, Lakebase project, and read-only Databricks App incident
-console. The next milestone is a larger fault matrix and recorded public demo.
-
-The reference workspace runs a Lakebase-CDF-compatible Delta fallback because
-Free Edition uses Databricks default catalog storage, while native Lakebase CDF
-currently requires an external-storage-backed catalog. The real Lakebase
-database remains deployed and exercised; the fallback preserves the documented
-CDF columns and all downstream semantics without overstating preview support.
+The project is deliberately shaped like a small platform feature: architecture, implementation, tests, deployment, observability, failure handling, and an honest production-readiness boundary all live in one repository.
 
 ## Run locally
 
@@ -36,6 +31,12 @@ python -m unittest discover -s tests -v
 ```
 
 The simulator exits successfully only when the projected current state matches an independent replay of every accepted unique event.
+
+To reproduce the checked-in benchmark:
+
+```powershell
+python scripts/benchmark_local.py --repeats 7 --output benchmarks/local-2026-10-29.json
+```
 
 ## Deploy to Databricks
 
@@ -48,6 +49,7 @@ databricks auth login --host https://<your-workspace-host>
 databricks bundle validate -t dev
 databricks bundle deploy -t dev
 databricks bundle run faultline_cdc -t dev
+databricks bundle run faultline_console -t dev
 ```
 
 Override `catalog`, `source_schema`, or `target_schema` with `--var` when your
@@ -79,39 +81,76 @@ The incident console runs as an authenticated Databricks App. Its service
 principal receives `CAN_USE` on one SQL warehouse and `SELECT` on only the four
 tables it displays.
 
-## Target architecture
+The local correctness oracle also reconciled every scenario in a seven-run fault matrix. Its largest case delivered 31,500 events with 10,500 duplicates and 1,539 quarantined events; p95 ingest-plus-independent-replay time was 231.957 ms on the development machine. These are local algorithm measurements, not Databricks cluster throughput or SLA claims. Raw measurements live in [`benchmarks/local-2026-10-29.json`](benchmarks/local-2026-10-29.json).
+
+## Architecture
 
 ```mermaid
 flowchart LR
-    A[Lakebase Postgres] -->|WAL changes| B[Lakebase CDF]
-    B --> C[(Unity Catalog Delta)]
-    C --> D[Lakeflow expectations]
-    D --> E[(Quarantine)]
-    D --> F[(Current state SCD1)]
-    D --> G[(History SCD2)]
-    D --> H[Pipeline event log]
-    E --> I[Incident console]
-    F --> I
-    G --> I
-    H --> I
+    A[Lakebase Postgres] --> B[Native Lakebase CDF]
+    C[Deterministic fault harness] --> D[Lakebase-CDF-compatible Delta]
+    B --> E[(Unity Catalog raw history)]
+    D --> E
+    E --> F[Lakeflow expectations]
+    F --> G[(Quarantine)]
+    F --> H[(Current state / SCD1)]
+    F --> I[(Audit history / SCD2)]
+    F --> J[(Reliability metrics)]
+    F --> K[(Pipeline event log)]
+    G --> L[Databricks App]
+    H --> L
+    I --> L
+    J --> L
 ```
 
-1. An operational order service writes inserts, updates, and deletes to Lakebase Postgres.
-2. Lakebase Change Data Feed copies WAL changes into a Unity Catalog Delta table.
-3. Lakeflow builds raw, validated, quarantined, current-state, history, and reliability datasets.
-4. A fault harness injects duplicates, malformed values, delayed events, concurrent updates, deletes, and schema changes.
-5. A Databricks App visualizes data freshness, expectation failures, reconciliation errors, recovery time, and replay outcomes.
-6. A Declarative Automation Bundle defines the app, pipeline, jobs, tests, and deployment configuration.
+Two input modes share the same documented Lakebase CDF row contract:
 
-## Design principles
+1. **Native mode:** Lakebase WAL changes land in a Unity Catalog Delta history table.
+2. **Fallback mode:** the deterministic harness writes the same system columns (`_pg_change_type`, `_pg_lsn`, `_pg_xid`, `_timestamp`, and `_sort_by`) directly to Delta.
 
-- **Correctness before UI:** state is derived from replayable events and checked with explicit invariants.
-- **Idempotency by default:** retries and duplicate delivery must not change results.
-- **Invalid data remains inspectable:** malformed events are quarantined instead of silently discarded.
-- **Local-first testing:** core logic runs without Databricks; platform adapters remain thin.
-- **Measurable reliability:** benchmarks will report throughput, validation overhead, duplicate suppression, recovery time, and reconciliation accuracy.
+The verified Free Edition deployment uses fallback mode because native Lakebase CDF rejected its default-storage catalog and required an external-storage-backed catalog. The Lakebase Postgres project is still deployed and exercised. The UI and README label the fallback explicitly rather than presenting preview behavior as verified.
 
-## Status
+## Reliability contract
 
-Faultline is under active development. Metrics and deployment claims will be added only after they are measured against a Databricks workspace.
+Faultline treats correctness as executable behavior:
+
+- an event identity is `(LSN, transaction ID, entity ID)`;
+- exact retries cannot change projected state;
+- current state is selected by source order, not arrival order;
+- a late update cannot resurrect a more recent delete;
+- invalid actionable events remain inspectable in quarantine;
+- update preimages remain in bronze for audit but never overwrite current state;
+- SCD1 and SCD2 projections use Lakeflow `AUTO CDC` with `_sort_by` ordering; and
+- an independent replay must exactly match every accepted unique event.
+
+## Repository map
+
+```text
+app/                         Read-only Streamlit incident console
+databricks/pipelines/        Lakeflow Declarative Pipeline
+databricks/sql/              Lakebase and Delta fallback setup
+resources/                   Bundle resources for app, pipeline, schemas, Lakebase
+scripts/                     Seed, benchmark, and workspace verification tools
+src/faultline/               Platform-independent CDC correctness oracle
+tests/                       Unit and platform-contract tests
+slopdocs/                    Dense engineering plans and feature decisions
+```
+
+## Trade-offs and next experiments
+
+- Databricks Apps require workspace authentication, so the public recruiter artifact is this repository and captured demo—not the live URL.
+- The checked-in fault matrix measures the local oracle. A paid or external-storage workspace is required to benchmark native Lakebase CDF end to end.
+- The next useful experiments are sustained-load recovery timing, schema-evolution scenarios, and a recorded 90-second failure/replay demonstration.
+
+## Primary references
+
+- [Lakebase Change Data Feed](https://docs.databricks.com/aws/en/oltp/projects/lakebase-cdf)
+- [Lakeflow AUTO CDC](https://docs.databricks.com/aws/en/ldp/cdc)
+- [Lakeflow expectations](https://docs.databricks.com/aws/en/ldp/expectations)
+- [Declarative Automation Bundles](https://docs.databricks.com/aws/en/dev-tools/bundles/)
+- [Databricks Apps resources and authorization](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/resources)
+
+## License
+
+[MIT](LICENSE)
 

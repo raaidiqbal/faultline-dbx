@@ -1,0 +1,147 @@
+{
+  "cases": [
+    {
+      "accepted_events": 210,
+      "baseline_events": 210,
+      "current_records": 90,
+      "delivered_events": 210,
+      "duplicate_events": 0,
+      "entities": 100,
+      "fault_profile": {
+        "corrupt_every": 0,
+        "duplicate_every": 0,
+        "reverse_window": 0
+      },
+      "median_events_per_second": 108281,
+      "median_seconds": 0.001939,
+      "name": "baseline-100",
+      "p95_seconds": 0.002298,
+      "quarantined_events": 0,
+      "reconciled": true,
+      "runs_seconds": [
+        0.002298,
+        0.001994,
+        0.001932,
+        0.00196,
+        0.001889,
+        0.001923,
+        0.001939
+      ]
+    },
+    {
+      "accepted_events": 191,
+      "baseline_events": 210,
+      "current_records": 90,
+      "delivered_events": 240,
+      "duplicate_events": 30,
+      "entities": 100,
+      "fault_profile": {
+        "corrupt_every": 11,
+        "duplicate_every": 7,
+        "reverse_window": 5
+      },
+      "median_events_per_second": 144317,
+      "median_seconds": 0.001663,
+      "name": "mixed-100",
+      "p95_seconds": 0.001783,
+      "quarantined_events": 19,
+      "reconciled": true,
+      "runs_seconds": [
+        0.001783,
+        0.001631,
+        0.001671,
+        0.001663,
+        0.00164,
+        0.001675,
+        0.001607
+      ]
+    },
+    {
+      "accepted_events": 1919,
+      "baseline_events": 2100,
+      "current_records": 900,
+      "delivered_events": 2400,
+      "duplicate_events": 300,
+      "entities": 1000,
+      "fault_profile": {
+        "corrupt_every": 11,
+        "duplicate_every": 7,
+        "reverse_window": 5
+      },
+      "median_events_per_second": 125725,
+      "median_seconds": 0.019089,
+      "name": "mixed-1000",
+      "p95_seconds": 0.01968,
+      "quarantined_events": 181,
+      "reconciled": true,
+      "runs_seconds": [
+        0.019089,
+        0.018346,
+        0.018415,
+        0.018379,
+        0.019306,
+        0.01968,
+        0.019434
+      ]
+    },
+    {
+      "accepted_events": 19181,
+      "baseline_events": 21000,
+      "current_records": 9000,
+      "delivered_events": 24000,
+      "duplicate_events": 3000,
+      "entities": 10000,
+      "fault_profile": {
+        "corrupt_every": 11,
+        "duplicate_every": 7,
+        "reverse_window": 5
+      },
+      "median_events_per_second": 114764,
+      "median_seconds": 0.209126,
+      "name": "mixed-10000",
+      "p95_seconds": 0.226765,
+      "quarantined_events": 1819,
+      "reconciled": true,
+      "runs_seconds": [
+        0.218298,
+        0.226765,
+        0.209126,
+        0.207775,
+        0.200776,
+        0.216494,
+        0.200918
+      ]
+    },
+    {
+      "accepted_events": 19461,
+      "baseline_events": 21000,
+      "current_records": 9000,
+      "delivered_events": 31500,
+      "duplicate_events": 10500,
+      "entities": 10000,
+      "fault_profile": {
+        "corrupt_every": 13,
+        "duplicate_every": 2,
+        "reverse_window": 50
+      },
+      "median_events_per_second": 149209,
+      "median_seconds": 0.211114,
+      "name": "severe-10000",
+      "p95_seconds": 0.231957,
+      "quarantined_events": 1539,
+      "reconciled": true,
+      "runs_seconds": [
+        0.231957,
+        0.21009,
+        0.211114,
+        0.224773,
+        0.21193,
+        0.203736,
+        0.203885
+      ]
+    }
+  ],
+  "generated_at": "2026-10-29T20:19:27.240064+00:00",
+  "method": "Median and p95 wall time across repeated in-memory ingest plus independent reconciliation; event generation and fault injection excluded.",
+  "repeats": 7
+}
