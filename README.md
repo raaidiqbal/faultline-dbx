@@ -15,7 +15,7 @@ This is a deployed end-to-end system, not a notebook mockup.
 
 - **Design:** explicit CDC ordering, idempotency, quarantine, tombstone, and replay invariants.
 - **Development:** dependency-free Python correctness oracle plus thin Databricks adapters.
-- **Testing:** 16 deterministic tests across Python 3.11 and 3.13, platform-contract tests, and an automated workspace verifier.
+- **Testing:** 20 deterministic tests across Python 3.11 and 3.13, seeded arrival-order property checks, platform-contract tests, and an automated workspace verifier.
 - **Delivery:** Declarative Automation Bundle owns Lakebase, Unity Catalog schemas, Lakeflow, and the Databricks App.
 - **Operations:** pipeline event log, expectations, reliability counters, SCD1 current state, SCD2 history, and a read-only incident console.
 - **Security:** OAuth instead of embedded tokens; the app receives `CAN_USE` on one warehouse and `SELECT` on only four tables.

@@ -12,3 +12,10 @@ Reconciliation: replay every accepted unique event in deterministic order into a
 
 Fault injection is deterministic and composable: duplicate every Nth event, corrupt every Nth event, reverse fixed-size windows. Add schema drift and transaction reordering after the basic core is stable.
 
+`tests/test_property_invariants.py` expands beyond fixed examples with 40 seeded
+workloads per property. Each workload is projected in a canonical fault-injected
+order and an independently shuffled order. Final state, fault counters, delete
+tombstones, and structured quarantine reasons must match. Keep the seeds fixed
+so failures reproduce exactly in CI; increase the range only when runtime remains
+small on both supported Python versions.
+

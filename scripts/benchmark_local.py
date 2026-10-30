@@ -6,7 +6,11 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 from statistics import median
+import sys
 import time
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
 from faultline.projector import CdcProjector
 from faultline.simulator import FaultProfile, generate_order_events, inject_faults
